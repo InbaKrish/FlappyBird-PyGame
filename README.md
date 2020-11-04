@@ -5,6 +5,6 @@ Python script for the falppybird game , works using the pygame module . And it h
 ### Install
 ```bash
 git clone https://github.com/InbaKrish/FlappyBird-PyGame.git
-cd PyProjectInitialization
+cd FlappyBird-PyGame
 pip install -r requirements.txt
 ```
