@@ -51,7 +51,8 @@ def put_pipes(pipe_rects):
 def move_pipes(pipe_rects):
     for pipe_rect in pipe_rects:
         pipe_rect.centerx -= 5
-    return pipe_rects
+    visible_pipe_rects = [pipe_rect for pipe_rect in pipe_rects if pipe_rect.right > -40]
+    return visible_pipe_rects
 
 def create_pipe_rects():
     height = random.choice(pipe_heights)
@@ -65,11 +66,13 @@ def collision_check(pipe_rects):
         if bird_rect.colliderect(pipe_rect):
             death_sound.play()
             birds = set_birds()
+            score_update_factor = True
             return False
     
     if bird_rect.bottom >= 660 or bird_rect.top <= -50:
         death_sound.play()
-        birds = set_birds() 
+        birds = set_birds()
+        score_update_factor = True
         return False
 
     return True
@@ -108,9 +111,22 @@ def display_score():
         bg_image = set_bg()
         birds = set_birds()
 
+def score_updater():
+    global score, pipe_rects, score_update_factor, high_score
+    if pipe_rects:
+        for pipe in pipe_rects:
+            if 55 < pipe.centerx < 65 and score_update_factor:
+                score += 1
+                point_sound.play()
+                score_update_factor = False
+            if pipe.centerx < 0:
+                score_update_factor = True
+    if score > high_score:
+        high_score = score
+
 #initialize the pygame
 pygame.init()
-pygame.mixer.pre_init(channels=1, buffer=512)
+#pygame.mixer.pre_init(channels=1, buffer=512)
 
 
 #sets the default canvas screen
@@ -135,6 +151,7 @@ bird = birds[bird_anim_index]
 bird_rect = bird.get_rect(center=(60, 384))
 BIRDFLAP = pygame.USEREVENT + 1
 pygame.time.set_timer(BIRDFLAP, 200)
+score_update_factor = True
 
 bg_image, pipe = set_bg()
 
@@ -146,6 +163,7 @@ pipe_heights = [300, 380, 500]
 gameover = pygame.transform.scale(pygame.image.load('assets/message.png').convert_alpha(), (int(184* 1.2), int(267* 1.2)))
 fly_sound = pygame.mixer.Sound('sound/sfx_wing.wav')
 death_sound = pygame.mixer.Sound('sound/sfx_hit.wav')
+point_sound = pygame.mixer.Sound('sound/sfx_point.wav')
 
 #pygame's clock 
 clock = pygame.time.Clock()
@@ -184,6 +202,7 @@ while True:
 
             bird,bird_rect = animate_bird()
 
+    #bg
     screen.blit(bg_image, (0, 0))  #sets the bg_image to the surface 
 
     if game_status:
@@ -198,11 +217,8 @@ while True:
         pipe_rects = move_pipes(pipe_rects)
         put_pipes(pipe_rects)
         
-        score += 0.0075
-        
-        if score > high_score:
-            high_score = score
-        
+        #score
+        score_updater()
         display_score()
 
     #floor
